@@ -8,5 +8,13 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/Todo.ts'
+export type * from './models/User.ts'
+export type * from './models/Employee.ts'
+export type * from './models/Department.ts'
+export type * from './models/Position.ts'
+export type * from './models/Attendance.ts'
+export type * from './models/LeaveType.ts'
+export type * from './models/LeaveRequest.ts'
+export type * from './models/Payroll.ts'
+export type * from './models/Document.ts'
 export type * from './commonInputTypes.ts'

@@ -7,8 +7,161 @@ datasource db {
   provider = "postgresql"
 }
 
-model Todo {
-  id        Int      @id @default(autoincrement())
-  title     String
+enum Role {
+  EMPLOYEE
+  HR
+  ADMIN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  INTERN
+}
+
+model User {
+  id              String  @id @default(uuid())
+  email           String  @unique
+  passwordHash    String
+  role            Role
+  isEmailVerified Boolean @default(false)
+
+  employee Employee?
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  leaveRequests LeaveRequest[]
+}
+
+model Employee {
+  id           String @id @default(uuid())
+  employeeCode String @unique
+
+  firstName       String
+  lastName        String
+  phone           String?
+  address         String?
+  profileImageUrl String?
+
+  employmentType EmploymentType
+  joinDate       DateTime
+  status         Boolean        @default(true)
+
+  departmentId String?
+  positionId   String?
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+
+  department Department? @relation(fields: [departmentId], references: [id])
+  position   Position?   @relation(fields: [positionId], references: [id])
+
+  attendance Attendance[]
+  leaves     LeaveRequest[]
+  payrolls   Payroll[]
+  documents  Document[]
+
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Department {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  employees Employee[]
+}
+
+model Position {
+  id        String     @id @default(uuid())
+  title     String
+  employees Employee[]
+}
+
+model Attendance {
+  id         String   @id @default(uuid())
+  employeeId String
+  date       DateTime
+
+  checkIn  DateTime?
+  checkOut DateTime?
+
+  status AttendanceStatus
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([employeeId, date])
+}
+
+model LeaveType {
+  id      String @id @default(uuid())
+  name    String @unique
+  maxDays Int?
+
+  leaves LeaveRequest[]
+}
+
+model LeaveRequest {
+  id          String @id @default(uuid())
+  employeeId  String
+  leaveTypeId String
+
+  startDate DateTime
+  endDate   DateTime
+  reason    String?
+
+  status LeaveStatus @default(PENDING)
+
+  approvedById String?
+  approvedBy   User?   @relation(fields: [approvedById], references: [id])
+
+  employee  Employee  @relation(fields: [employeeId], references: [id])
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Payroll {
+  id         String @id @default(uuid())
+  employeeId String
+
+  baseSalary Decimal
+  bonus      Decimal @default(0)
+  deductions Decimal @default(0)
+  netSalary  Decimal
+
+  month Int
+  year  Int
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([employeeId, month, year])
+}
+
+model Document {
+  id         String @id @default(uuid())
+  employeeId String
+
+  type    String
+  fileUrl String
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  uploadedAt DateTime @default(now())
 }
